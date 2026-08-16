@@ -446,13 +446,8 @@
         font-family: inherit;
       }
 
-      .range-input:focus {
-        border-color: var(--accent, #6366f1);
-      }
-
-      .range-input::placeholder {
-        color: var(--text-muted, #6b7280);
-      }
+      .range-input:focus { border-color: var(--accent, #6366f1); }
+      .range-input::placeholder { color: var(--text-muted, #6b7280); }
 
       .range-sep {
         font-size: 0.82rem;
@@ -475,7 +470,7 @@
         opacity: 0.6;
       }
 
-
+      .bulk-btn {
         padding: 0.5rem 0.95rem;
         border-radius: 10px;
         font-size: 0.8125rem;
@@ -1116,9 +1111,7 @@
           width: 100%;
         }
 
-        .range-hint {
-          display: none;
-        }
+        .range-hint { display: none; }
 
         .bulk-btn {
           padding: 0.4rem 0.55rem;
@@ -1663,7 +1656,7 @@
           if (!nodes || nodes.length === 0)
             return '<p class="empty-state">No files found</p>';
 
-          _fileCounter = 0; // reset counter each render
+          _fileCounter = 0;
           let html = '<ul id="treeview">';
           nodes.forEach((node) => {
             html += generateNodeHtml(node);
@@ -1925,30 +1918,22 @@
         function selectRange(lo, hi) {
           const $files = $("input[name^='filenode_']");
           const total = $files.length;
-
           if (total === 0) {
-            alert("No files loaded yet. Please load the file list first.");
+            alert("No files loaded yet.");
             return;
           }
-
           lo = Math.max(1, Math.min(lo, hi));
           hi = Math.min(total, Math.max(lo, hi));
-
           if (lo > total) {
             alert(`Only ${total} file${total === 1 ? "" : "s"} available.`);
             return;
           }
-
-          let count = 0;
           $files.each(function () {
-            // Use data-pos if available (stamped during render), else fall back to DOM order
             const pos = parseInt($(this).data("pos"), 10) || ($files.index(this) + 1);
             if (pos >= lo && pos <= hi) {
               $(this).prop("checked", true);
-              count++;
             }
           });
-
           updateAllFolderStates();
           checkingfiles();
           checked_size();
@@ -1957,20 +1942,16 @@
         $("#btnSelectRange").click(function () {
           const fromVal = $("#rangeFrom").val().trim();
           const toVal = $("#rangeTo").val().trim();
-
           if (!fromVal || !toVal) {
             alert("Please enter both a start and end number.");
             return;
           }
-
           const lo = parseInt(fromVal, 10);
           const hi = parseInt(toVal, 10);
-
           if (isNaN(lo) || isNaN(hi) || lo < 1 || hi < 1) {
             alert("Please enter valid positive numbers.");
             return;
           }
-
           selectRange(lo, hi);
         });
 
