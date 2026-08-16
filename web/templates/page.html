@@ -1,3 +1,5 @@
+<!-- This file is a part of NEO-WZML (github.com/irisXDR/NEO-WZML) -->
+
 <!doctype html>
 <html lang="en">
   <head>
@@ -424,7 +426,56 @@
         gap: 0.5rem;
       }
 
-      .bulk-btn {
+      .range-actions {
+        justify-content: flex-start;
+        margin-top: 0.25rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid var(--border-color);
+        width: 100%;
+      }
+
+      .range-input {
+        width: 72px;
+        padding: 0.45rem 0.5rem;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        background: var(--bg-secondary, #1a1a1e);
+        color: inherit;
+        font-size: 0.8rem;
+        outline: none;
+        font-family: inherit;
+      }
+
+      .range-input:focus {
+        border-color: var(--accent, #6366f1);
+      }
+
+      .range-input::placeholder {
+        color: var(--text-muted, #6b7280);
+      }
+
+      .range-sep {
+        font-size: 0.82rem;
+        color: var(--text-muted, #6b7280);
+      }
+
+      .range-hint {
+        font-size: 0.72rem;
+        color: var(--text-muted, #6b7280);
+      }
+
+      .file-pos-badge {
+        font-size: 0.67rem;
+        color: var(--text-muted, #9ca3af);
+        min-width: 22px;
+        text-align: right;
+        margin-right: 4px;
+        flex-shrink: 0;
+        font-family: monospace;
+        opacity: 0.6;
+      }
+
+
         padding: 0.5rem 0.95rem;
         border-radius: 10px;
         font-size: 0.8125rem;
@@ -965,12 +1016,6 @@
         box-shadow: 0 10px 26px rgba(239, 68, 68, 0.35);
       }
 
-      #rangeInput:focus {
-        outline: none;
-        border-color: var(--accent-primary);
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
-      }
-
       @media (max-width: 640px) {
         .container {
           padding: 1rem 1rem 8rem;
@@ -1214,6 +1259,16 @@
               <span>Deselect all</span>
             </button>
           </div>
+          <div class="bulk-actions range-actions" role="group" aria-label="Range selection">
+            <input type="number" id="rangeFrom" min="1" placeholder="from #" class="range-input" aria-label="Range start">
+            <span class="range-sep">–</span>
+            <input type="number" id="rangeTo" min="1" placeholder="to #" class="range-input" aria-label="Range end">
+            <button type="button" id="btnSelectRange" class="bulk-btn" title="Select files by number range">
+              <i class="fas fa-list-check" aria-hidden="true"></i>
+              <span>Select Range</span>
+            </button>
+            <span class="range-hint">file numbers across all folders</span>
+          </div>
         </div>
       </div>
 
@@ -1225,25 +1280,6 @@
       >
         <section id="fileSection" class="card">
           <div class="file-card">
-            <div class="range-selection-container" style="margin-bottom: 1.25rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; padding-bottom: 1rem; border-bottom: 1px solid var(--border-color);">
-              <input
-                type="text"
-                id="rangeInput"
-                class="bulk-btn"
-                style="width: 180px; text-align: left; padding: 0.5rem 0.75rem; letter-spacing: normal; background: var(--bg-secondary); color: var(--text-primary);"
-                placeholder="e.g., 1-10, 15, 20-22"
-                title="Enter file numbers or ranges, separated by commas."
-              />
-              <button
-                type="button"
-                id="applyRangeBtn"
-                class="bulk-btn"
-                title="Apply range selection"
-              >
-                <i class="fas fa-filter"></i>
-                <span>Apply Range</span>
-              </button>
-            </div>
             <div id="fileTree"></div>
           </div>
         </section>
@@ -1318,7 +1354,14 @@
         const gid = urlParams.get("gid");
         const pin = urlParams.get("pin");
         const type = urlParams.get("type") || "torrent";
-        const endpoint = type === "mega" ? "mega" : "torrent";
+        const endpoint =
+          type === "mega"
+            ? "mega"
+            : type === "terabox"
+            ? "terabox"
+            : type === "rclone"
+            ? "rclone"
+            : "torrent";
 
         if (pin) {
           $("#pinInput").val(pin);
@@ -1604,10 +1647,13 @@
             .replace(/'/g, "&#39;");
         }
 
+        let _fileCounter = 0;
+
         function generateHtmlTree(nodes) {
           if (!nodes || nodes.length === 0)
             return '<p class="empty-state">No files found</p>';
 
+          _fileCounter = 0; // reset counter each render
           let html = '<ul id="treeview">';
           nodes.forEach((node) => {
             html += generateNodeHtml(node);
@@ -1642,7 +1688,9 @@
             html +=
               '<div class="folder-toggle"><i class="fas fa-chevron-right"></i></div>';
           } else {
-            html += `<input type="checkbox" name="filenode_${safeId}" id="filenode_${safeId}"${isChecked} data-size="${safeSize}" data-type="file">`;
+            _fileCounter++;
+            html += `<span class="file-pos-badge">${_fileCounter}</span>`;
+            html += `<input type="checkbox" name="filenode_${safeId}" id="filenode_${safeId}"${isChecked} data-size="${safeSize}" data-type="file" data-pos="${_fileCounter}">`;
             html += '<div class="file-icon"><i class="fas fa-file"></i></div>';
             html += `<div class="file-info">`;
             html += `<div class="file-name">${safeName}</div>`;
@@ -1863,54 +1911,73 @@
           checked_size();
         });
 
-        $("#applyRangeBtn").click(function () {
-          const rangeStr = $("#rangeInput").val().trim();
-          if (!rangeStr) {
-            alert("Please enter a range or file number.");
+        // ── Range Selection ───────────────────────────────────────────────────
+        function selectRange(lo, hi) {
+          const $files = $("input[name^='filenode_']");
+          const total = $files.length;
+
+          if (total === 0) {
+            alert("No files loaded yet. Please load the file list first.");
             return;
           }
 
-          const indicesToSelect = new Set();
-          try {
-            const parts = rangeStr.split(',');
-            parts.forEach(part => {
-              part = part.trim();
-              if (part.includes('-')) {
-                const [start, end] = part.split('-').map(num => parseInt(num.trim(), 10));
-                if (isNaN(start) || isNaN(end) || start > end || start < 1) {
-                  throw new Error(`Invalid range: "${part}"`);
-                }
-                for (let i = start; i <= end; i++) {
-                  indicesToSelect.add(i);
-                }
-              } else {
-                const num = parseInt(part, 10);
-                if (isNaN(num) || num < 1) {
-                  throw new Error(`Invalid number: "${part}"`);
-                }
-                indicesToSelect.add(num);
-              }
-            });
+          lo = Math.max(1, Math.min(lo, hi));
+          hi = Math.min(total, Math.max(lo, hi));
 
-            const $fileCheckboxes = $("input[name^='filenode_']");
-            if ($fileCheckboxes.length === 0) {
-              alert("No files available to select.");
-              return;
+          if (lo > total) {
+            alert(`Only ${total} file${total === 1 ? "" : "s"} available.`);
+            return;
+          }
+
+          let count = 0;
+          $files.each(function () {
+            // Use data-pos if available (stamped during render), else fall back to DOM order
+            const pos = parseInt($(this).data("pos"), 10) || ($files.index(this) + 1);
+            if (pos >= lo && pos <= hi) {
+              $(this).prop("checked", true);
+              count++;
             }
+          });
 
-            $fileCheckboxes.each(function (index) {
-              if (indicesToSelect.has(index + 1)) {
-                $(this).prop("checked", true);
-              }
-            });
+          updateAllFolderStates();
+          checkingfiles();
+          checked_size();
+        }
 
+        $("#btnSelectRange").click(function () {
+          const fromVal = $("#rangeFrom").val().trim();
+          const toVal = $("#rangeTo").val().trim();
+
+          if (!fromVal || !toVal) {
+            alert("Please enter both a start and end number.");
+            return;
+          }
+
+          const lo = parseInt(fromVal, 10);
+          const hi = parseInt(toVal, 10);
+
+          if (isNaN(lo) || isNaN(hi) || lo < 1 || hi < 1) {
+            alert("Please enter valid positive numbers.");
+            return;
+          }
+
+          selectRange(lo, hi);
+        });
+
+        // Shift-click range selection
+        let _lastCheckedIdx = null;
+        $(document).on("click", "input[name^='filenode_']", function (e) {
+          const $files = $("input[name^='filenode_']");
+          const idx = $files.index(this);
+          if (e.shiftKey && _lastCheckedIdx !== null && idx !== -1 && idx !== _lastCheckedIdx) {
+            const lo = Math.min(_lastCheckedIdx, idx);
+            const hi = Math.max(_lastCheckedIdx, idx);
+            $files.slice(lo, hi + 1).prop("checked", true);
             updateAllFolderStates();
             checkingfiles();
             checked_size();
-            $("#rangeInput").val('');
-          } catch (error) {
-            alert(`Invalid Input: ${error.message}.\nPlease use a format like "1-10, 15, 20-22".`);
           }
+          if (idx !== -1) _lastCheckedIdx = idx;
         });
 
         $("#scrollUp").click(function () {
