@@ -71,6 +71,7 @@ async def check_running_tasks(listener, state="dl"):
         if state == "dl"
         else safe_int(Config.QUEUE_UPLOAD)
     )
+
     event = None
     is_over_limit = False
     async with queue_dict_lock:
