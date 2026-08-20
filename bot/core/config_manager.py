@@ -34,7 +34,7 @@ class Config:
     EXCLUDED_EXTENSIONS = ""
     FFMPEG_CMDS = {}
     FILELION_API = ""
-    MEDIA_STORE = True
+    MEDIA_STORE = False 
     FORCE_SUB_IDS = ""
     GOFILE_API = ""
     GOFILE_FOLDER_ID = ""
@@ -57,7 +57,7 @@ class Config:
     MEGA_EMAIL = ""
     MEGA_PASSWORD = ""
     MEGA_ENABLED = True
-    TERABOX_ENABLED = True
+    TERABOX_ENABLED = False 
     TERABOX_UPLOAD_PATH = ""
     DIRECT_LIMIT = 0
     MEGA_LIMIT = 0
@@ -79,7 +79,7 @@ class Config:
     LEECH_DUMP_CHAT = ""
     LINKS_LOG_ID = ""
     MIRROR_LOG_ID = ""
-    CLEAN_LOG_MSG = False
+    CLEAN_LOG_MSG = True
     LEECH_PREFIX = ""
     LEECH_CAPTION = ""
     LEECH_SUFFIX = ""
@@ -98,11 +98,11 @@ class Config:
     OWNER_ID = 0
     QUEUE_ALL = 0
     QUEUE_DOWNLOAD = 0
-    QUEUE_UPLOAD = 0
+    QUEUE_UPLOAD = 4
     RCLONE_FLAGS = ""
     RCLONE_PATH = ""
     RCLONE_SERVE_URL = ""
-    SHOW_CLOUD_LINK = True
+    SHOW_CLOUD_LINK = True 
     RCLONE_SERVE_USER = ""
     RCLONE_SERVE_PASS = ""
     RCLONE_SERVE_PORT = 8080
@@ -115,7 +115,7 @@ class Config:
     SEARCH_PLUGINS = []
     SET_COMMANDS = True
     SHOW_EXTRA_CMDS = False
-    STATUS_LIMIT = 10
+    STATUS_LIMIT = 4
     STATUS_UPDATE_INTERVAL = 15
     STOP_DUPLICATE = False
     STRICT_AUTH_MODE = False  # owner/sudo/explicit only
@@ -141,13 +141,13 @@ class Config:
     USER_TIME_INTERVAL = 0
     UPLOAD_PATHS = {}
     UPSTREAM_REPO = ""
-    UPSTREAM_BRANCH = "master"
-    AUTO_UPDATE = True
-    UPDATE_PKGS = True
+    UPSTREAM_BRANCH = ""
+    AUTO_UPDATE = False
+    UPDATE_PKGS = False
     UPGRADE_PACKAGES = False
     USER_SESSION_STRING = ""
     USE_SERVICE_ACCOUNTS = False
-    WEB_PINCODE = True
+    WEB_PINCODE = False
     YT_DLP_OPTIONS = {}
 
     @classmethod
